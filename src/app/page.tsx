@@ -1,45 +1,86 @@
 import Link from "next/link";
+import { createClient } from "@/utils/supabase/server";
+import { signOut } from "./(auth)/actions";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const ctaHref = user ? "/dashboard" : "/login";
+
   return (
-    <main className="flex min-h-screen items-center justify-center bg-zinc-950 px-6 text-white">
-      <section className="w-full max-w-5xl text-center">
-        <h1 className="text-5xl font-bold tracking-tight sm:text-6xl">QuoteMate NZ</h1>
-        <p className="mt-6 text-lg text-zinc-300 sm:text-xl">
-          给新西兰小企业的 AI 报价助手
-        </p>
-        <div className="mt-12 grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-3">
-          <article className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 text-left transition duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-[0_0_30px_rgba(255,255,255,0.08)]">
-            <div className="text-2xl">💬</div>
-            <h2 className="mt-4 text-lg font-semibold text-white">30 秒生成报价</h2>
-            <p className="mt-2 text-sm leading-6 text-zinc-300">
-              客户咨询一到，AI 自动生成结构化报价草稿
-            </p>
-          </article>
-
-          <article className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 text-left transition duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-[0_0_30px_rgba(255,255,255,0.08)]">
-            <div className="text-2xl">📧</div>
-            <h2 className="mt-4 text-lg font-semibold text-white">自动跟进不漏单</h2>
-            <p className="mt-2 text-sm leading-6 text-zinc-300">
-              三天没回复？系统自动提醒你发 follow-up
-            </p>
-          </article>
-
-          <article className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 text-left transition duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-[0_0_30px_rgba(255,255,255,0.08)]">
-            <div className="text-2xl">📊</div>
-            <h2 className="mt-4 text-lg font-semibold text-white">客户状态一目了然</h2>
-            <p className="mt-2 text-sm leading-6 text-zinc-300">
-              新询盘、报价中、已成交——一个看板管清楚
-            </p>
-          </article>
+    <div className="flex min-h-screen flex-col bg-zinc-950 text-white">
+      <header className="shrink-0 border-b border-zinc-800/50 px-6 py-4">
+        <div className="mx-auto flex max-w-5xl items-center justify-between">
+          <div className="flex-1" />
+          <div className="flex items-center justify-end gap-3">
+            {user ? (
+              <>
+                <span className="max-w-[220px] truncate text-sm text-zinc-400">{user.email}</span>
+                <form action={signOut}>
+                  <button
+                    type="submit"
+                    className="rounded-md border border-zinc-600 bg-transparent px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:border-zinc-400 hover:bg-zinc-800/60"
+                  >
+                    Sign out
+                  </button>
+                </form>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="text-sm text-zinc-300 transition hover:text-white">
+                  Log in
+                </Link>
+                <Link href="/signup" className="text-sm text-zinc-300 transition hover:text-white">
+                  Sign up
+                </Link>
+              </>
+            )}
+          </div>
         </div>
-        <Link
-          href="/login"
-          className="mt-12 inline-flex items-center justify-center rounded-full bg-white px-8 py-3 text-base font-semibold text-zinc-900 transition-colors hover:bg-zinc-200"
-        >
-          开始使用
-        </Link>
-      </section>
-    </main>
+      </header>
+
+      <main className="flex flex-1 flex-col items-center justify-center px-6">
+        <section className="w-full max-w-5xl text-center">
+          <h1 className="text-5xl font-bold tracking-tight sm:text-6xl">QuoteMate NZ</h1>
+          <p className="mt-6 text-lg text-zinc-300 sm:text-xl">
+            给新西兰小企业的 AI 报价助手
+          </p>
+          <div className="mt-12 grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-3">
+            <article className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 text-left transition duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-[0_0_30px_rgba(255,255,255,0.08)]">
+              <div className="text-2xl">💬</div>
+              <h2 className="mt-4 text-lg font-semibold text-white">30 秒生成报价</h2>
+              <p className="mt-2 text-sm leading-6 text-zinc-300">
+                客户咨询一到，AI 自动生成结构化报价草稿
+              </p>
+            </article>
+
+            <article className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 text-left transition duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-[0_0_30px_rgba(255,255,255,0.08)]">
+              <div className="text-2xl">📧</div>
+              <h2 className="mt-4 text-lg font-semibold text-white">自动跟进不漏单</h2>
+              <p className="mt-2 text-sm leading-6 text-zinc-300">
+                三天没回复？系统自动提醒你发 follow-up
+              </p>
+            </article>
+
+            <article className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 text-left transition duration-300 hover:-translate-y-1 hover:border-zinc-700 hover:shadow-[0_0_30px_rgba(255,255,255,0.08)]">
+              <div className="text-2xl">📊</div>
+              <h2 className="mt-4 text-lg font-semibold text-white">客户状态一目了然</h2>
+              <p className="mt-2 text-sm leading-6 text-zinc-300">
+                新询盘、报价中、已成交——一个看板管清楚
+              </p>
+            </article>
+          </div>
+          <Link
+            href={ctaHref}
+            className="mt-12 inline-flex items-center justify-center rounded-full bg-white px-8 py-3 text-base font-semibold text-zinc-900 transition-colors hover:bg-zinc-200"
+          >
+            开始使用
+          </Link>
+        </section>
+      </main>
+    </div>
   );
 }
