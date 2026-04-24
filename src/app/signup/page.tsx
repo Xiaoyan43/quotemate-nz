@@ -10,6 +10,15 @@ type SignupPageProps = {
 };
 
 export default async function SignupPage({ searchParams }: SignupPageProps) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    redirect("/dashboard");
+  }
+
   const params = (await searchParams) ?? {};
 
   async function signup(formData: FormData) {
