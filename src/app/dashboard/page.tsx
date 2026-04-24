@@ -95,29 +95,28 @@ export default async function DashboardPage() {
               const budgetLabel = formatBudget(inquiry.budget_min, inquiry.budget_max);
 
               return (
-                <article
-                  key={inquiry.id}
-                  className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6 shadow-[0_0_30px_rgba(0,0,0,0.2)]"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <h2 className="truncate text-lg font-semibold text-white">{inquiry.title}</h2>
-                      <p className="mt-2 text-sm leading-6 text-zinc-300">{inquiry.description}</p>
+                <Link key={inquiry.id} href={`/inquiries/${inquiry.id}`} className="block">
+                  <article className="cursor-pointer rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6 shadow-[0_0_30px_rgba(0,0,0,0.2)] transition hover:bg-zinc-800/70 hover:shadow-[0_0_35px_rgba(255,255,255,0.06)]">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <h2 className="truncate text-lg font-semibold text-white">{inquiry.title}</h2>
+                        <p className="mt-2 text-sm leading-6 text-zinc-300">{inquiry.description}</p>
+                      </div>
+                      <span
+                        className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium capitalize ${statusClasses(
+                          inquiry.status,
+                        )}`}
+                      >
+                        {inquiry.status}
+                      </span>
                     </div>
-                    <span
-                      className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium capitalize ${statusClasses(
-                        inquiry.status,
-                      )}`}
-                    >
-                      {inquiry.status}
-                    </span>
-                  </div>
 
-                  <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-zinc-400">
-                    {budgetLabel ? <span>{budgetLabel}</span> : null}
-                    <span>{formatCreatedAt(inquiry.created_at)}</span>
-                  </div>
-                </article>
+                    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-zinc-400">
+                      {budgetLabel ? <span>{budgetLabel}</span> : null}
+                      <span>{formatCreatedAt(inquiry.created_at)}</span>
+                    </div>
+                  </article>
+                </Link>
               );
             })
           )}
