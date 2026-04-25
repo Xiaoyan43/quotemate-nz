@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import GenerateQuoteSection from "./GenerateQuoteSection";
 
 type InquiryStatus = "new" | "quoted" | "accepted" | "declined" | "archived";
 
@@ -12,6 +13,14 @@ type Inquiry = {
   budget_max: number | null;
   status: InquiryStatus;
   created_at: string;
+};
+
+type QuoteHistoryRow = {
+  id: string;
+  created_at: string;
+  total: number | null;
+  line_items: unknown;
+  model_used: string | null;
 };
 
 type InquiryDetailPageProps = {
@@ -63,6 +72,17 @@ function formatRelativeTime(value: string) {
   return rtf.format(Math.round(diffMs / day), "day");
 }
 
+function formatNzd(amount: number) {
+  return `NZ$ ${amount.toLocaleString("en-NZ", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+function getLineItemCount(lineItems: unknown) {
+  return Array.isArray(lineItems) ? lineItems.length : 0;
+}
+
 export default async function InquiryDetailPage({ params }: InquiryDetailPageProps) {
   const { id } = await params;
 
@@ -83,6 +103,18 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
 
   const inquiry = data as Inquiry;
   const budgetLabel = formatBudget(inquiry.budget_min, inquiry.budget_max);
+
+  const { data: quotesData, error: quotesError } = await supabase
+    .from("quotes")
+    .select("id, created_at, total, line_items, model_used")
+    .eq("inquiry_id", id)
+    .order("created_at", { ascending: false });
+
+  if (quotesError) {
+    throw new Error(quotesError.message);
+  }
+
+  const quotes = (quotesData ?? []) as QuoteHistoryRow[];
 
   return (
     <main className="min-h-screen bg-zinc-950 px-6 py-12 text-white">
@@ -111,16 +143,37 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
 
         <section className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6 shadow-[0_0_30px_rgba(0,0,0,0.2)]">
           <h2 className="text-xl font-semibold tracking-tight">Quotes</h2>
-          <p className="mt-3 text-sm text-zinc-300">No quote generated yet.</p>
-
-          <button
-            type="button"
-            disabled
-            className="mt-5 inline-flex cursor-not-allowed items-center justify-center rounded-full border border-zinc-700 bg-zinc-800/60 px-5 py-2.5 text-sm font-semibold text-zinc-300"
-          >
-            🤖 Generate AI Quote Draft
-          </button>
-          <p className="mt-2 text-xs text-zinc-500">AI integration coming soon</p>
+          {quotes.length > 0 ? (
+            <div className="mt-4">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-400">
+                Quote History
+              </h3>
+              <div className="mt-3 space-y-3">
+                {quotes.map((quote) => {
+                  const lineItemCount = getLineItemCount(quote.line_items);
+                  const itemLabel = `${lineItemCount} item${lineItemCount === 1 ? "" : "s"}`;
+                  return (
+                    <article
+                      key={quote.id}
+                      className="rounded-xl border border-zinc-800 bg-zinc-950/30 px-4 py-3"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                        <span className="text-zinc-300">{formatRelativeTime(quote.created_at)}</span>
+                        <span className="font-semibold text-zinc-100">
+                          {formatNzd(quote.total ?? 0)}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-xs text-zinc-400">
+                        <span>{itemLabel}</span>
+                        {quote.model_used ? <span className="ml-3">{quote.model_used}</span> : null}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+          <GenerateQuoteSection inquiryId={id} />
         </section>
       </section>
     </main>
