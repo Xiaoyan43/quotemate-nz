@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import AppHeader from "@/components/AppHeader";
 import { createClient } from "@/utils/supabase/server";
 
 type SignupPageProps = {
@@ -47,8 +48,10 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-zinc-950 px-6 text-white">
-      <section className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900/70 p-8 shadow-[0_0_40px_rgba(0,0,0,0.35)]">
+    <div className="flex min-h-screen flex-col bg-zinc-950 text-white">
+      <AppHeader />
+      <main className="flex flex-1 items-center justify-center px-6 py-8">
+        <section className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900/70 p-8 shadow-[0_0_40px_rgba(0,0,0,0.35)]">
         <h1 className="text-3xl font-semibold tracking-tight">Create your account</h1>
         <p className="mt-2 text-sm text-zinc-300">
           Start using AI-powered quoting for your tradie business.
@@ -123,7 +126,8 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
             Log in
           </Link>
         </p>
-      </section>
-    </main>
+        </section>
+      </main>
+    </div>
   );
 }

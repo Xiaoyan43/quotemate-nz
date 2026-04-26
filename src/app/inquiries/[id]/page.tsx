@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import AppHeader from "@/components/AppHeader";
 import { createClient } from "@/utils/supabase/server";
 import GenerateQuoteSection from "./GenerateQuoteSection";
 
@@ -117,8 +118,10 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
   const quotes = (quotesData ?? []) as QuoteHistoryRow[];
 
   return (
-    <main className="min-h-screen bg-zinc-950 px-6 py-12 text-white">
-      <section className="mx-auto w-full max-w-4xl">
+    <div className="flex min-h-screen flex-col bg-zinc-950 text-white">
+      <AppHeader />
+      <main className="flex-1 px-6 py-12">
+        <section className="mx-auto w-full max-w-4xl">
         <Link href="/dashboard" className="text-sm text-zinc-400 transition hover:text-zinc-200">
           ← Back to Dashboard
         </Link>
@@ -175,7 +178,8 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
           ) : null}
           <GenerateQuoteSection inquiryId={id} />
         </section>
-      </section>
-    </main>
+        </section>
+      </main>
+    </div>
   );
 }

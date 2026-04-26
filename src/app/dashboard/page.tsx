@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import AppHeader from "@/components/AppHeader";
 import { createClient } from "@/utils/supabase/server";
 
 type InquiryStatus = "new" | "quoted" | "accepted" | "declined" | "archived";
@@ -70,8 +71,10 @@ export default async function DashboardPage() {
   const email = user.email ?? "there";
 
   return (
-    <main className="min-h-screen bg-zinc-950 px-6 py-12 text-white">
-      <section className="mx-auto w-full max-w-4xl">
+    <div className="flex min-h-screen flex-col bg-zinc-950 text-white">
+      <AppHeader />
+      <main className="flex-1 px-6 py-12">
+        <section className="mx-auto w-full max-w-4xl">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h1 className="text-4xl font-bold tracking-tight">Dashboard</h1>
@@ -121,7 +124,8 @@ export default async function DashboardPage() {
             })
           )}
         </div>
-      </section>
-    </main>
+        </section>
+      </main>
+    </div>
   );
 }

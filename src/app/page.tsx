@@ -1,6 +1,6 @@
 import Link from "next/link";
+import AppHeader from "@/components/AppHeader";
 import { createClient } from "@/utils/supabase/server";
-import { signOut } from "./(auth)/actions";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -12,35 +12,7 @@ export default async function Home() {
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-950 text-white">
-      <header className="shrink-0 border-b border-zinc-800/50 px-6 py-4">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <div className="flex-1" />
-          <div className="flex items-center justify-end gap-3">
-            {user ? (
-              <>
-                <span className="max-w-[220px] truncate text-sm text-zinc-400">{user.email}</span>
-                <form action={signOut}>
-                  <button
-                    type="submit"
-                    className="rounded-md border border-zinc-600 bg-transparent px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:border-zinc-400 hover:bg-zinc-800/60"
-                  >
-                    Sign out
-                  </button>
-                </form>
-              </>
-            ) : (
-              <>
-                <Link href="/login" className="text-sm text-zinc-300 transition hover:text-white">
-                  Log in
-                </Link>
-                <Link href="/signup" className="text-sm text-zinc-300 transition hover:text-white">
-                  Sign up
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      <AppHeader />
 
       <main className="flex flex-1 flex-col items-center justify-center px-6">
         <section className="w-full max-w-5xl text-center">

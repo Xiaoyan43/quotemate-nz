@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import AppHeader from "@/components/AppHeader";
 import { createClient } from "@/utils/supabase/server";
 import { createInquiry } from "../actions";
 
@@ -22,8 +23,10 @@ export default async function NewInquiryPage({ searchParams }: NewInquiryPagePro
   const params = (await searchParams) ?? {};
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-zinc-950 px-6 text-white">
-      <section className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900/70 p-8 shadow-[0_0_40px_rgba(0,0,0,0.35)]">
+    <div className="flex min-h-screen flex-col bg-zinc-950 text-white">
+      <AppHeader />
+      <main className="flex flex-1 items-center justify-center px-6 py-8">
+        <section className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900/70 p-8 shadow-[0_0_40px_rgba(0,0,0,0.35)]">
         <Link href="/dashboard" className="text-sm text-zinc-400 transition hover:text-zinc-200">
           ← Back to dashboard
         </Link>
@@ -105,7 +108,8 @@ export default async function NewInquiryPage({ searchParams }: NewInquiryPagePro
             Create inquiry
           </button>
         </form>
-      </section>
-    </main>
+        </section>
+      </main>
+    </div>
   );
 }
