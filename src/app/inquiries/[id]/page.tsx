@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import { createClient } from "@/utils/supabase/server";
 import GenerateQuoteSection from "./GenerateQuoteSection";
+import QuoteHistoryCard from "./QuoteHistoryCard";
 
 type InquiryStatus = "new" | "quoted" | "accepted" | "declined" | "archived";
 
@@ -20,8 +21,13 @@ type QuoteHistoryRow = {
   id: string;
   created_at: string;
   total: number | null;
+  subtotal: number | null;
+  gst: number | null;
   line_items: unknown;
+  assumptions: string[] | null;
   model_used: string | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
 };
 
 type InquiryDetailPageProps = {
@@ -73,17 +79,6 @@ function formatRelativeTime(value: string) {
   return rtf.format(Math.round(diffMs / day), "day");
 }
 
-function formatNzd(amount: number) {
-  return `NZ$ ${amount.toLocaleString("en-NZ", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
-function getLineItemCount(lineItems: unknown) {
-  return Array.isArray(lineItems) ? lineItems.length : 0;
-}
-
 export default async function InquiryDetailPage({ params }: InquiryDetailPageProps) {
   const { id } = await params;
 
@@ -107,7 +102,7 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
 
   const { data: quotesData, error: quotesError } = await supabase
     .from("quotes")
-    .select("id, created_at, total, line_items, model_used")
+    .select("id, created_at, total, subtotal, gst, line_items, assumptions, model_used, input_tokens, output_tokens")
     .eq("inquiry_id", id)
     .order("created_at", { ascending: false });
 
@@ -152,27 +147,9 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
                 Quote History
               </h3>
               <div className="mt-3 space-y-3">
-                {quotes.map((quote) => {
-                  const lineItemCount = getLineItemCount(quote.line_items);
-                  const itemLabel = `${lineItemCount} item${lineItemCount === 1 ? "" : "s"}`;
-                  return (
-                    <article
-                      key={quote.id}
-                      className="rounded-xl border border-zinc-800 bg-zinc-950/30 px-4 py-3"
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                        <span className="text-zinc-300">{formatRelativeTime(quote.created_at)}</span>
-                        <span className="font-semibold text-zinc-100">
-                          {formatNzd(quote.total ?? 0)}
-                        </span>
-                      </div>
-                      <div className="mt-1 text-xs text-zinc-400">
-                        <span>{itemLabel}</span>
-                        {quote.model_used ? <span className="ml-3">{quote.model_used}</span> : null}
-                      </div>
-                    </article>
-                  );
-                })}
+                {quotes.map((quote) => (
+                  <QuoteHistoryCard key={quote.id} quote={quote} />
+                ))}
               </div>
             </div>
           ) : null}
