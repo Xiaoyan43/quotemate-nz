@@ -39,5 +39,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-HANDOFF-DAY2.md
-HANDOFF-DAY2-END.md
+HANDOFF-*.md
+
