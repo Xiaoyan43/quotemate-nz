@@ -1,0 +1,67 @@
+name: Supabase Keepalive
+
+# Free Supabase projects auto-pause after ~7 days of inactivity. This workflow makes a
+# tiny read request to the database every ~3 days so the project stays awake while the
+# QuoteMate live demo is linked from job applications. It also writes a heartbeat file so
+# the repo stays "active" and GitHub does not disable the schedule after 60 days.
+#
+# Secrets required (set via `gh secret set`):
+#   SUPABASE_URL  -> NEXT_PUBLIC_SUPABASE_URL
+#   SUPABASE_KEY  -> NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (public client key; RLS protects data)
+
+on:
+  schedule:
+    - cron: '0 6 */3 * *'   # every ~3 days at 06:00 UTC (safe margin under the 7-day pause)
+  workflow_dispatch:        # allow manual runs from the Actions tab
+
+permissions:
+  contents: write
+
+concurrency:
+  group: supabase-keepalive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ping Supabase REST (keeps the free project awake)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_KEY:-}" ]; then
+            echo "Missing SUPABASE_URL / SUPABASE_KEY secrets."
+            exit 1
+          fi
+          # A SELECT against an RLS-protected table returns [] for anon but still runs a
+          # query in Postgres, which counts as activity and prevents the idle pause.
+          code=$(curl -sS -o /dev/null -w '%{http_code}' \
+            "${SUPABASE_URL}/rest/v1/quotes?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_KEY}")
+          echo "Supabase REST responded with HTTP ${code}"
+          # 2xx/4xx all mean the project is awake and reachable. 5xx / 000 usually means
+          # the project is paused or down, so fail loudly to surface it.
+          if [ "${code}" -ge 500 ] || [ "${code}" = "000" ]; then
+            echo "Project appears paused or unreachable — resume it in the Supabase dashboard."
+            exit 1
+          fi
+
+      - name: Write heartbeat and commit
+        run: |
+          set -euo pipefail
+          date -u +"Last Supabase keepalive ping: %Y-%m-%dT%H:%M:%SZ" > .github/keepalive.txt
+          if [ -n "$(git status --porcelain .github/keepalive.txt)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .github/keepalive.txt
+            git commit -m "chore: supabase keepalive heartbeat [skip ci]"
+            git push
+          else
+            echo "Heartbeat unchanged; nothing to commit."
+          fi
