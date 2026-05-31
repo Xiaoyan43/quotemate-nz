@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { GenerateQuoteLineItem } from "@/lib/quote-types";
+import { deleteQuote } from "../actions";
 
 type LineItemCategory = GenerateQuoteLineItem["category"];
 
@@ -18,7 +19,7 @@ type QuoteHistoryRow = {
   output_tokens: number | null;
 };
 
-type Props = { quote: QuoteHistoryRow };
+type Props = { quote: QuoteHistoryRow; inquiryId: string };
 
 function isLineItemCategory(value: unknown): value is LineItemCategory {
   return (
@@ -119,7 +120,7 @@ function categoryBadgeClass(category: LineItemCategory) {
   }
 }
 
-export default function QuoteHistoryCard({ quote }: Props) {
+export default function QuoteHistoryCard({ quote, inquiryId }: Props) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
   const lineItems = parseLineItems(quote.line_items);
@@ -240,7 +241,26 @@ export default function QuoteHistoryCard({ quote }: Props) {
             </div>
           </div>
 
-          <div className="mt-3 flex justify-end">
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <form
+              action={deleteQuote}
+              onSubmit={(event) => {
+                if (
+                  !window.confirm("Delete this quote? This cannot be undone.")
+                ) {
+                  event.preventDefault();
+                }
+              }}
+            >
+              <input type="hidden" name="id" value={quote.id} />
+              <input type="hidden" name="inquiryId" value={inquiryId} />
+              <button
+                type="submit"
+                className="inline-flex items-center rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-200 transition hover:bg-red-500/20"
+              >
+                Delete
+              </button>
+            </form>
             <button
               type="button"
               onClick={handleCopy}

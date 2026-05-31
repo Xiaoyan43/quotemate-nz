@@ -207,7 +207,7 @@ export default async function InquiryDetailPage({
               </h3>
               <div className="mt-3 space-y-3">
                 {quotes.map((quote) => (
-                  <QuoteHistoryCard key={quote.id} quote={quote} />
+                  <QuoteHistoryCard key={quote.id} quote={quote} inquiryId={id} />
                 ))}
               </div>
             </div>
