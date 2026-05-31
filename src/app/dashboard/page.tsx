@@ -75,15 +75,34 @@ export default async function DashboardPage() {
 
   const { data: quotesData, error: quotesError } = await supabase
     .from("quotes")
-    .select("total")
-    .eq("user_id", user.id);
+    .select("inquiry_id, total, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
 
   if (quotesError) {
     throw new Error(quotesError.message);
   }
 
-  const quotes = (quotesData ?? []) as { total: number | null }[];
-  const totalQuotedValue = quotes.reduce((sum, q) => sum + (q.total ?? 0), 0);
+  const quotes = (quotesData ?? []) as {
+    inquiry_id: string;
+    total: number | null;
+    created_at: string;
+  }[];
+
+  // "Total quoted" = the value of the latest quote per inquiry. An inquiry can
+  // have several regenerated drafts in its history, so summing every quote row
+  // would double-count the same job. Quotes are ordered newest-first, so the
+  // first one seen for an inquiry is its latest.
+  const latestTotalByInquiry = new Map<string, number>();
+  for (const quote of quotes) {
+    if (!latestTotalByInquiry.has(quote.inquiry_id)) {
+      latestTotalByInquiry.set(quote.inquiry_id, quote.total ?? 0);
+    }
+  }
+  const totalQuotedValue = [...latestTotalByInquiry.values()].reduce(
+    (sum, total) => sum + total,
+    0,
+  );
   const awaitingQuote = inquiries.filter((i) => i.status === "new").length;
 
   const stats = [
