@@ -72,6 +72,40 @@ function formatNzd(amount: number) {
   })}`;
 }
 
+// Build a clean, customer-ready plain-text version of the quote for the trade
+// owner to paste straight into an email or text message.
+function buildQuoteText(
+  quote: QuoteHistoryRow,
+  lineItems: GenerateQuoteLineItem[],
+): string {
+  const date = new Intl.DateTimeFormat("en-NZ", { dateStyle: "medium" }).format(
+    new Date(quote.created_at),
+  );
+  const assumptions = quote.assumptions ?? [];
+
+  const lines: string[] = [`Quote — ${date}`, ""];
+
+  for (const item of lineItems) {
+    lines.push(`- ${item.description} (${item.category}): ${formatNzd(item.amount_nzd)}`);
+  }
+
+  lines.push(
+    "",
+    `Subtotal: ${formatNzd(quote.subtotal ?? 0)}`,
+    `GST (15%): ${formatNzd(quote.gst ?? 0)}`,
+    `Total: ${formatNzd(quote.total ?? 0)}`,
+  );
+
+  if (assumptions.length > 0) {
+    lines.push("", "Assumptions:");
+    for (const a of assumptions) {
+      lines.push(`- ${a}`);
+    }
+  }
+
+  return lines.join("\n");
+}
+
 function categoryBadgeClass(category: LineItemCategory) {
   switch (category) {
     case "materials":
@@ -87,10 +121,24 @@ function categoryBadgeClass(category: LineItemCategory) {
 
 export default function QuoteHistoryCard({ quote }: Props) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
   const lineItems = parseLineItems(quote.line_items);
   const itemLabel = `${lineItems.length} item${lineItems.length === 1 ? "" : "s"}`;
   const assumptions = quote.assumptions ?? [];
   const hasTokens = quote.input_tokens !== null || quote.output_tokens !== null;
+
+  async function handleCopy() {
+    const text = buildQuoteText(quote, lineItems);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API can be unavailable (e.g. insecure context) — fall back to
+      // a prompt so the user can still copy the text manually.
+      window.prompt("Copy this quote:", text);
+    }
+  }
 
   return (
     <article className="rounded-xl border border-zinc-800 bg-zinc-950/30">
@@ -190,6 +238,16 @@ export default function QuoteHistoryCard({ quote }: Props) {
               <span>Total</span>
               <span className="tabular-nums">{formatNzd(quote.total ?? 0)}</span>
             </div>
+          </div>
+
+          <div className="mt-3 flex justify-end">
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-800/60 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700/60"
+            >
+              {copied ? "Copied!" : "Copy quote"}
+            </button>
           </div>
 
           {assumptions.length > 0 ? (
