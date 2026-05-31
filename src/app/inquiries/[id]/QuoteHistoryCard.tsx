@@ -261,7 +261,16 @@ export default function QuoteHistoryCard({ quote, inquiryId }: Props) {
                 Delete
               </button>
             </form>
-            <button
+            <div className="flex items-center gap-2">
+              <a
+                href={`/quotes/${quote.id}/print`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-800/60 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700/60"
+              >
+                Download PDF
+              </a>
+              <button
               type="button"
               onClick={handleCopy}
               className="inline-flex items-center gap-1.5 rounded-full border border-zinc-700 bg-zinc-800/60 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700/60"
@@ -302,6 +311,7 @@ export default function QuoteHistoryCard({ quote, inquiryId }: Props) {
               )}
               {copied ? "Copied!" : "Copy quote"}
             </button>
+            </div>
           </div>
 
           {assumptions.length > 0 ? (
