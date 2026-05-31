@@ -196,6 +196,39 @@ export async function deleteInquiry(formData: FormData) {
   redirect("/dashboard");
 }
 
+export async function deleteQuote(formData: FormData) {
+  const id = String(formData.get("id") ?? "").trim();
+  const inquiryId = String(formData.get("inquiryId") ?? "").trim();
+
+  if (!id || !inquiryId) {
+    redirect("/dashboard");
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { error } = await supabase
+    .from("quotes")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) {
+    redirect(`/inquiries/${inquiryId}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  // Dashboard stats count quotes and sum their totals, so revalidate it too.
+  revalidatePath("/dashboard");
+  revalidatePath(`/inquiries/${inquiryId}`);
+  redirect(`/inquiries/${inquiryId}`);
+}
+
 const RECORD_QUOTE_SYSTEM_PROMPT = `You are an experienced tradesperson in New Zealand helping a small trade business owner draft quotes for customer inquiries. You have practical knowledge of NZ market rates for materials and labor.
 
 Your job: produce a structured DRAFT quote that the business owner will review and edit before sending to the customer.
