@@ -114,6 +114,57 @@ export async function updateInquiry(formData: FormData) {
   redirect(`/inquiries/${id}`);
 }
 
+const INQUIRY_STATUSES = [
+  "new",
+  "quoted",
+  "accepted",
+  "declined",
+  "archived",
+] as const;
+
+type InquiryStatus = (typeof INQUIRY_STATUSES)[number];
+
+function isInquiryStatus(value: string): value is InquiryStatus {
+  return (INQUIRY_STATUSES as readonly string[]).includes(value);
+}
+
+export async function updateInquiryStatus(formData: FormData) {
+  const id = String(formData.get("id") ?? "").trim();
+  const status = String(formData.get("status") ?? "").trim();
+
+  if (!id) {
+    redirect("/dashboard");
+  }
+
+  // Never trust the posted status — a Server Action is reachable via direct POST.
+  if (!isInquiryStatus(status)) {
+    redirect(`/inquiries/${id}?error=Invalid%20status`);
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { error } = await supabase
+    .from("inquiries")
+    .update({ status })
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) {
+    redirect(`/inquiries/${id}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/inquiries/${id}`);
+  redirect(`/inquiries/${id}`);
+}
+
 export async function deleteInquiry(formData: FormData) {
   const id = String(formData.get("id") ?? "").trim();
 
