@@ -1,0 +1,31 @@
+{
+  // Save when you click away from the editor — so when you switch from Cursor's
+  // own AI to the Claude Code panel, Claude Code always reads your latest edits.
+  // This prevents the "two tools editing the same file" footgun.
+  "files.autoSave": "onFocusChange",
+
+  // No Prettier/ESLint is configured in this project, so don't reformat on save.
+  "editor.formatOnSave": false,
+
+  // Use the TypeScript version pinned in node_modules (matches `next build`).
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
+  // Keep search/indexing fast and relevant — hide build output and deps.
+  "search.exclude": {
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/.vercel": true,
+    "**/*.tsbuildinfo": true,
+    "**/package-lock.json": true
+  },
+  "files.watcherExclude": {
+    "**/.next/**": true,
+    "**/node_modules/**": true
+  },
+
+  // Tailwind 4: treat these as Tailwind-aware for class IntelliSense.
+  "files.associations": {
+    "*.css": "tailwindcss"
+  }
+}
