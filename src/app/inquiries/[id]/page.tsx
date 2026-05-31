@@ -54,7 +54,7 @@ function statusClasses(status: InquiryStatus) {
     case "accepted":
       return "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
     case "declined":
-      return "bg-zinc-500/15 text-zinc-300 border-zinc-500/30";
+      return "bg-rose-500/15 text-rose-300 border-rose-500/30";
     case "archived":
       return "bg-zinc-500/15 text-zinc-300 border-zinc-500/30";
   }
