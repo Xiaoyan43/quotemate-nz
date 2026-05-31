@@ -56,6 +56,95 @@ export async function createInquiry(formData: FormData) {
   redirect("/dashboard");
 }
 
+export async function updateInquiry(formData: FormData) {
+  const id = String(formData.get("id") ?? "").trim();
+  const title = String(formData.get("title") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+  const budgetMinRaw = String(formData.get("budgetMin") ?? "").trim();
+  const budgetMaxRaw = String(formData.get("budgetMax") ?? "").trim();
+
+  if (!id) {
+    redirect("/dashboard");
+  }
+
+  const editPath = `/inquiries/${id}/edit`;
+
+  if (!title || !description) {
+    redirect(`${editPath}?error=Title%20and%20description%20are%20required`);
+  }
+
+  const budgetMin = budgetMinRaw ? Number(budgetMinRaw) : null;
+  const budgetMax = budgetMaxRaw ? Number(budgetMaxRaw) : null;
+
+  if (
+    (budgetMinRaw && Number.isNaN(budgetMin)) ||
+    (budgetMaxRaw && Number.isNaN(budgetMax))
+  ) {
+    redirect(`${editPath}?error=Budget%20values%20must%20be%20valid%20numbers`);
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  // Scope by user_id as well as the RLS policy — defence in depth: a Server
+  // Action is reachable via direct POST, so never trust the id alone.
+  const { error } = await supabase
+    .from("inquiries")
+    .update({
+      title,
+      description,
+      budget_min: budgetMin,
+      budget_max: budgetMax,
+    })
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) {
+    redirect(`${editPath}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/inquiries/${id}`);
+  redirect(`/inquiries/${id}`);
+}
+
+export async function deleteInquiry(formData: FormData) {
+  const id = String(formData.get("id") ?? "").trim();
+
+  if (!id) {
+    redirect("/dashboard");
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  // Associated quotes cascade-delete via the inquiry_id FK (on delete cascade).
+  const { error } = await supabase
+    .from("inquiries")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) {
+    redirect(`/inquiries/${id}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath("/dashboard");
+  redirect("/dashboard");
+}
+
 const RECORD_QUOTE_SYSTEM_PROMPT = `You are an experienced tradesperson in New Zealand helping a small trade business owner draft quotes for customer inquiries. You have practical knowledge of NZ market rates for materials and labor.
 
 Your job: produce a structured DRAFT quote that the business owner will review and edit before sending to the customer.

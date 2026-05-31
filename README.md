@@ -18,7 +18,7 @@ Live demo: [https://quotemate-nz.vercel.app](https://quotemate-nz.vercel.app)
 ## Core Features (Current Implementation)
 
 - **Auth**: Sign up, login, and protected app routes.
-- **Inquiry workflow**: Inquiry create + read flows are implemented (full update/delete CRUD is not yet implemented).
+- **Inquiry workflow**: Full inquiry CRUD — create, read, update, and delete (deleting an inquiry cascade-deletes its quotes).
 - **AI quote generation**: Server-side quote drafting via Anthropic tool use.
 - **Structured line items**: AI output is constrained to typed categories and validated server-side.
 - **GST calculation**: Subtotal, GST (15%), and total are computed in code.
