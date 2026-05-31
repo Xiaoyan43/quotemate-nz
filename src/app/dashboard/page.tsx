@@ -25,6 +25,10 @@ function formatBudget(min: number | null, max: number | null) {
   return null;
 }
 
+function formatNzdCompact(amount: number) {
+  return `NZ$ ${Math.round(amount).toLocaleString("en-NZ")}`;
+}
+
 function formatCreatedAt(value: string) {
   return new Intl.DateTimeFormat("en-NZ", {
     dateStyle: "medium",
@@ -68,6 +72,27 @@ export default async function DashboardPage() {
   }
 
   const inquiries = (data ?? []) as Inquiry[];
+
+  const { data: quotesData, error: quotesError } = await supabase
+    .from("quotes")
+    .select("total")
+    .eq("user_id", user.id);
+
+  if (quotesError) {
+    throw new Error(quotesError.message);
+  }
+
+  const quotes = (quotesData ?? []) as { total: number | null }[];
+  const totalQuotedValue = quotes.reduce((sum, q) => sum + (q.total ?? 0), 0);
+  const awaitingQuote = inquiries.filter((i) => i.status === "new").length;
+
+  const stats = [
+    { label: "Inquiries", value: inquiries.length.toLocaleString("en-NZ") },
+    { label: "Quotes generated", value: quotes.length.toLocaleString("en-NZ") },
+    { label: "Total quoted", value: formatNzdCompact(totalQuotedValue) },
+    { label: "Awaiting quote", value: awaitingQuote.toLocaleString("en-NZ") },
+  ];
+
   const email = user.email ?? "there";
 
   return (
@@ -86,6 +111,20 @@ export default async function DashboardPage() {
           >
             + New inquiry
           </Link>
+        </div>
+
+        <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+          {stats.map((stat) => (
+            <div
+              key={stat.label}
+              className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-5 shadow-[0_0_30px_rgba(0,0,0,0.2)]"
+            >
+              <div className="text-2xl font-bold tracking-tight text-white">{stat.value}</div>
+              <div className="mt-1 text-xs uppercase tracking-wide text-zinc-400">
+                {stat.label}
+              </div>
+            </div>
+          ))}
         </div>
 
         <div className="mt-8 space-y-4">
