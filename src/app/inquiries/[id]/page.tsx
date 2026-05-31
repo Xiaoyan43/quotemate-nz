@@ -2,11 +2,20 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import { createClient } from "@/utils/supabase/server";
+import { updateInquiryStatus } from "../actions";
 import DeleteInquiryButton from "./DeleteInquiryButton";
 import GenerateQuoteSection from "./GenerateQuoteSection";
 import QuoteHistoryCard from "./QuoteHistoryCard";
 
 type InquiryStatus = "new" | "quoted" | "accepted" | "declined" | "archived";
+
+const INQUIRY_STATUSES: InquiryStatus[] = [
+  "new",
+  "quoted",
+  "accepted",
+  "declined",
+  "archived",
+];
 
 type Inquiry = {
   id: string;
@@ -45,7 +54,7 @@ function statusClasses(status: InquiryStatus) {
     case "accepted":
       return "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
     case "declined":
-      return "bg-zinc-500/15 text-zinc-300 border-zinc-500/30";
+      return "bg-rose-500/15 text-rose-300 border-rose-500/30";
     case "archived":
       return "bg-zinc-500/15 text-zinc-300 border-zinc-500/30";
   }
@@ -134,14 +143,40 @@ export default async function InquiryDetailPage({
         ) : null}
 
         <article className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6 shadow-[0_0_30px_rgba(0,0,0,0.2)]">
-          <div className="flex items-start justify-between gap-4">
-            <span
-              className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium capitalize ${statusClasses(
-                inquiry.status,
-              )}`}
-            >
-              {inquiry.status}
-            </span>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <span
+                className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium capitalize ${statusClasses(
+                  inquiry.status,
+                )}`}
+              >
+                {inquiry.status}
+              </span>
+
+              <form
+                action={updateInquiryStatus}
+                className="flex flex-wrap items-center gap-2"
+              >
+                <input type="hidden" name="id" value={inquiry.id} />
+                <select
+                  name="status"
+                  defaultValue={inquiry.status}
+                  className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white outline-none transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/40"
+                >
+                  {INQUIRY_STATUSES.map((status) => (
+                    <option key={status} value={status}>
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center rounded-full border border-zinc-700 bg-zinc-800/60 px-4 py-2 text-sm font-medium text-zinc-200 transition hover:bg-zinc-700/60"
+                >
+                  Update
+                </button>
+              </form>
+            </div>
 
             <div className="flex shrink-0 items-center gap-2">
               <Link
