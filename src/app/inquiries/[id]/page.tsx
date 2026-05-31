@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import { createClient } from "@/utils/supabase/server";
+import DeleteInquiryButton from "./DeleteInquiryButton";
 import GenerateQuoteSection from "./GenerateQuoteSection";
 import QuoteHistoryCard from "./QuoteHistoryCard";
 
@@ -32,6 +33,7 @@ type QuoteHistoryRow = {
 
 type InquiryDetailPageProps = {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ error?: string }>;
 };
 
 function statusClasses(status: InquiryStatus) {
@@ -79,8 +81,12 @@ function formatRelativeTime(value: string) {
   return rtf.format(Math.round(diffMs / day), "day");
 }
 
-export default async function InquiryDetailPage({ params }: InquiryDetailPageProps) {
+export default async function InquiryDetailPage({
+  params,
+  searchParams,
+}: InquiryDetailPageProps) {
   const { id } = await params;
+  const queryParams = (await searchParams) ?? {};
 
   const supabase = await createClient();
   const {
@@ -121,14 +127,32 @@ export default async function InquiryDetailPage({ params }: InquiryDetailPagePro
           ← Back to Dashboard
         </Link>
 
+        {queryParams.error ? (
+          <p className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+            {queryParams.error}
+          </p>
+        ) : null}
+
         <article className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-6 shadow-[0_0_30px_rgba(0,0,0,0.2)]">
-          <span
-            className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium capitalize ${statusClasses(
-              inquiry.status,
-            )}`}
-          >
-            {inquiry.status}
-          </span>
+          <div className="flex items-start justify-between gap-4">
+            <span
+              className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium capitalize ${statusClasses(
+                inquiry.status,
+              )}`}
+            >
+              {inquiry.status}
+            </span>
+
+            <div className="flex shrink-0 items-center gap-2">
+              <Link
+                href={`/inquiries/${inquiry.id}/edit`}
+                className="inline-flex items-center justify-center rounded-full border border-zinc-700 bg-zinc-800/60 px-4 py-2 text-sm font-medium text-zinc-200 transition hover:bg-zinc-700/60"
+              >
+                Edit
+              </Link>
+              <DeleteInquiryButton inquiryId={inquiry.id} />
+            </div>
+          </div>
 
           <h1 className="mt-4 text-3xl font-bold tracking-tight">{inquiry.title}</h1>
           <p className="mt-4 text-sm leading-7 text-zinc-300">{inquiry.description}</p>
