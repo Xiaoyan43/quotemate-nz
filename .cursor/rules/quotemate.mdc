@@ -1,0 +1,46 @@
+---
+description: QuoteMate NZ project conventions — always applied
+alwaysApply: true
+---
+
+# QuoteMate NZ — project rules
+
+AI + full-stack portfolio app for NZ trade businesses: capture customer inquiries,
+generate structured AI quote drafts, persist quote history with per-user isolation.
+**The live demo at https://quotemate-nz.vercel.app is linked from a job-application
+résumé — treat production stability as a hard requirement.**
+
+## ⚠️ This is NOT the Next.js you know
+- Next.js **16.2.4**: APIs, conventions, and file structure may differ from training data.
+- Before writing Next.js code, consult `node_modules/next/dist/docs/` and heed deprecation notices.
+
+## Tech stack
+- Next.js 16.2.4 · React 19 · TypeScript (strict) · Tailwind CSS 4
+- Supabase: Auth + Postgres + Row Level Security (RLS)
+- Anthropic SDK, model id **`claude-haiku-4-5-20251001`** (do not silently swap models)
+- Deployed on Vercel; production branch is `main`
+
+## Architecture conventions (match the existing code)
+- **Data loading → Server Components** (dashboard, inquiry detail load Supabase server-side).
+- **Interactive quote generation → Client Component** (generation state, quote tables, streaming summary).
+- **Structured AI quote + DB insert → Server Action** — call Claude with a tool schema, validate
+  output server-side, compute totals in code, then insert the quote row.
+- **Streaming summary → Route Handler** (`src/app/api/quotes/stream-summary/route.ts`) streams
+  plain-text after the structured draft exists. This is the "dual streaming" UX: structured first,
+  narrative streams second.
+- **Per-user isolation → Supabase RLS** with `auth.uid() = user_id` on `customers`, `inquiries`, `quotes`.
+
+## Hard rules / known footguns
+- **GST**: compute subtotal, GST (15%), total **in code**, never let the model do the math.
+- **Column naming**: the quotes tax column is **`gst`**, NOT `tax`.
+- **Tool use over JSON-in-prompt**: constrain Claude output with a tool input schema + server parsing.
+- **Do not touch** `supabase/migrations/*` or `src/utils/supabase/{server,client,middleware}.ts`
+  unless explicitly asked — the migrations contain a deliberate, documented schema-drift history.
+- AI metadata lives in native columns (`assumptions`, `model_used`, `input_tokens`, `output_tokens`),
+  not jsonb.
+
+## Workflow discipline (protects the live demo)
+- **Never develop on or push directly to `main`.** Branch from main: `feature/<name>`.
+- Verify on the Vercel preview URL before merging to `main`. Only `main` updates production.
+- `npm run build` must pass before merging.
+- A GitHub Actions bot pushes keepalive heartbeat commits to `main`; pull before working.
