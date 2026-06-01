@@ -25,6 +25,10 @@ Live demo: [https://quotemate-nz.vercel.app](https://quotemate-nz.vercel.app)
 - **Quote persistence**: Generated quotes are inserted into Supabase with metadata.
 - **Quote history**: Inquiry detail page shows historical quote entries.
 - **Dual streaming UX**: Structured quote appears first, then a customer-facing summary streams token-by-token.
+- **Inquiry status workflow**: Move an inquiry through new → quoted → accepted → declined → archived from the detail page.
+- **Dashboard summary**: Stat cards for total inquiries, quotes generated, total quoted value (latest quote per inquiry, GST-inclusive), and inquiries awaiting a quote.
+- **Quote export**: Copy a quote as customer-ready plain text, or open a printable quote page and save it as a PDF (browser print, no dependencies).
+- **Quote management**: Delete individual quotes from an inquiry's history (dashboard stats stay in sync).
 
 ## Architecture
 
