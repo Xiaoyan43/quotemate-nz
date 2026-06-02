@@ -229,6 +229,54 @@ export async function deleteQuote(formData: FormData) {
   redirect(`/inquiries/${inquiryId}`);
 }
 
+const VALID_CATEGORIES = new Set(["materials", "labor", "subcontractor", "other"]);
+
+export async function updateQuoteLineItems(
+  quoteId: string,
+  inquiryId: string,
+  lineItems: GenerateQuoteLineItem[],
+): Promise<{ error: string } | null> {
+  if (!quoteId || !inquiryId) return { error: "Missing quote or inquiry ID" };
+
+  if (lineItems.length < 2 || lineItems.length > 6) {
+    return { error: "A quote must have between 2 and 6 line items" };
+  }
+
+  for (const item of lineItems) {
+    if (!item.description?.trim()) {
+      return { error: "All line items must have a description" };
+    }
+    if (!VALID_CATEGORIES.has(item.category)) {
+      return { error: "Invalid category" };
+    }
+    if (!Number.isFinite(item.amount_nzd) || item.amount_nzd < 0) {
+      return { error: "All amounts must be valid non-negative numbers" };
+    }
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: "Not authenticated" };
+
+  const subtotal = lineItems.reduce((sum, li) => sum + li.amount_nzd, 0);
+  const gst = Math.round(subtotal * GST_RATE * 100) / 100;
+  const total = Math.round((subtotal + gst) * 100) / 100;
+
+  const { error: dbError } = await supabase
+    .from("quotes")
+    .update({ line_items: lineItems, subtotal, gst, total })
+    .eq("id", quoteId)
+    .eq("user_id", user.id);
+
+  if (dbError) return { error: dbError.message };
+
+  revalidatePath(`/inquiries/${inquiryId}`);
+  return null;
+}
+
 const RECORD_QUOTE_SYSTEM_PROMPT = `You are an experienced tradesperson in New Zealand helping a small trade business owner draft quotes for customer inquiries. You have practical knowledge of NZ market rates for materials and labor.
 
 Your job: produce a structured DRAFT quote that the business owner will review and edit before sending to the customer.
