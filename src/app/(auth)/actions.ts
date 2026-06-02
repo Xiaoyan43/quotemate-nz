@@ -52,6 +52,12 @@ export async function signOut() {
   redirect("/");
 }
 
+export async function signOutAndSignUp() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/signup");
+}
+
 export async function demoSignIn() {
   const email = process.env.DEMO_EMAIL;
   const password = process.env.DEMO_PASSWORD;

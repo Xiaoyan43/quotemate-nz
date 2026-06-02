@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
-import { signOut } from "@/app/(auth)/actions";
+import { signOut, signOutAndSignUp } from "@/app/(auth)/actions";
 
 export default async function AppHeader() {
   const supabase = await createClient();
@@ -51,9 +51,11 @@ export default async function AppHeader() {
       {isDemo && (
         <div className="border-b border-amber-500/30 bg-amber-500/10 px-6 py-2 text-center text-xs text-amber-300">
           You are viewing a demo account with sample data.{" "}
-          <Link href="/signup" className="font-semibold underline underline-offset-2 hover:text-amber-200">
-            Create your own account
-          </Link>
+          <form action={signOutAndSignUp} className="inline">
+            <button type="submit" className="font-semibold underline underline-offset-2 hover:text-amber-200">
+              Create your own account
+            </button>
+          </form>
         </div>
       )}
     </>
