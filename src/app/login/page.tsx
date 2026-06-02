@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import { createClient } from "@/utils/supabase/server";
+import { demoSignIn } from "@/app/(auth)/actions";
 
 type LoginPageProps = {
   searchParams?: Promise<{
@@ -107,6 +108,24 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             Create an account
           </Link>
         </p>
+
+        {process.env.DEMO_EMAIL && process.env.DEMO_PASSWORD && (
+          <>
+            <div className="mt-6 flex items-center gap-3">
+              <div className="h-px flex-1 bg-zinc-700" />
+              <span className="text-xs text-zinc-500">or</span>
+              <div className="h-px flex-1 bg-zinc-700" />
+            </div>
+            <form action={demoSignIn} className="mt-4">
+              <button
+                type="submit"
+                className="w-full rounded-full border border-zinc-600 bg-transparent px-5 py-2.5 text-sm font-semibold text-zinc-200 transition hover:border-zinc-400 hover:bg-zinc-800/60"
+              >
+                Try demo — no signup required
+              </button>
+            </form>
+          </>
+        )}
         </section>
       </main>
     </div>

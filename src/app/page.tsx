@@ -1,6 +1,7 @@
 import Link from "next/link";
 import AppHeader from "@/components/AppHeader";
 import { createClient } from "@/utils/supabase/server";
+import { demoSignIn } from "@/app/(auth)/actions";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -8,7 +9,7 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const ctaHref = user ? "/dashboard" : "/login";
+  const demoEnabled = Boolean(process.env.DEMO_EMAIL && process.env.DEMO_PASSWORD);
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-950 text-white">
@@ -45,12 +46,34 @@ export default async function Home() {
               </p>
             </article>
           </div>
-          <Link
-            href={ctaHref}
-            className="mt-12 inline-flex items-center justify-center rounded-full bg-white px-8 py-3 text-base font-semibold text-zinc-900 transition-colors hover:bg-zinc-200"
-          >
-            Get started
-          </Link>
+
+          {user ? (
+            <Link
+              href="/dashboard"
+              className="mt-12 inline-flex items-center justify-center rounded-full bg-white px-8 py-3 text-base font-semibold text-zinc-900 transition-colors hover:bg-zinc-200"
+            >
+              Go to dashboard
+            </Link>
+          ) : (
+            <div className="mt-12 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+              {demoEnabled && (
+                <form action={demoSignIn}>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center justify-center rounded-full bg-white px-8 py-3 text-base font-semibold text-zinc-900 transition-colors hover:bg-zinc-200"
+                  >
+                    Try demo — no signup
+                  </button>
+                </form>
+              )}
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center rounded-full border border-zinc-600 px-8 py-3 text-base font-semibold text-zinc-200 transition-colors hover:border-zinc-400 hover:text-white"
+              >
+                Log in
+              </Link>
+            </div>
+          )}
         </section>
       </main>
     </div>

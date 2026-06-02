@@ -51,3 +51,21 @@ export async function signOut() {
   revalidatePath("/");
   redirect("/");
 }
+
+export async function demoSignIn() {
+  const email = process.env.DEMO_EMAIL;
+  const password = process.env.DEMO_PASSWORD;
+
+  if (!email || !password) {
+    redirect("/login?error=Demo%20mode%20is%20not%20configured");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    redirect("/login?error=Demo%20login%20failed.%20Please%20try%20again.");
+  }
+
+  redirect("/dashboard");
+}
