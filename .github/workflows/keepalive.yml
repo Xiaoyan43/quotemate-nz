@@ -1,9 +1,9 @@
 name: Supabase Keepalive
 
-# Free Supabase projects auto-pause after ~7 days of inactivity. This workflow makes a
-# tiny read request to the database every ~3 days so the project stays awake while the
-# QuoteMate live demo is linked from job applications. It also writes a heartbeat file so
-# the repo stays "active" and GitHub does not disable the schedule after 60 days.
+# Free Supabase projects auto-pause after ~7 days of low activity. Supabase currently
+# recommends a few database requests each day, so this workflow makes three small reads
+# per day while the QuoteMate live demo is linked from job applications. The midnight
+# run also writes a heartbeat file so GitHub does not disable the schedule after 60 days.
 #
 # Secrets required (set via `gh secret set`):
 #   SUPABASE_URL  -> NEXT_PUBLIC_SUPABASE_URL
@@ -11,7 +11,8 @@ name: Supabase Keepalive
 
 on:
   schedule:
-    - cron: '0 6 */3 * *'   # every ~3 days at 06:00 UTC (safe margin under the 7-day pause)
+    - cron: '17 0 * * *'     # daily database ping plus repository heartbeat
+    - cron: '17 8,16 * * *'  # two additional daily database pings
   workflow_dispatch:        # allow manual runs from the Actions tab
 
 permissions:
@@ -26,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Ping Supabase REST (keeps the free project awake)
         env:
@@ -53,6 +54,7 @@ jobs:
           fi
 
       - name: Write heartbeat and commit
+        if: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '17 0 * * *' }}
         run: |
           set -euo pipefail
           date -u +"Last Supabase keepalive ping: %Y-%m-%dT%H:%M:%SZ" > .github/keepalive.txt
